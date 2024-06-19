@@ -1,23 +1,34 @@
 #include <GLFW/glfw3.h>
+#include <stdlib.h>
+#include "chip8.h"
 
-int main(void)
+
+GLFWwindow* initWindow()
 {
     GLFWwindow* window;
-
     /* Initialize the library */
     if (!glfwInit())
-        return -1;
+        exit(-1);
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(640, 320, "Chip8-Emu", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
-        return -1;
+        exit(-1);
     }
 
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
+
+    return window;
+}
+
+int main(void)
+{
+    GLFWwindow* window = initWindow();
+
+    chip8 chip8_emu;
 
     /* Loop until the user closes the window */
     while (!glfwWindowShouldClose(window))
@@ -35,3 +46,4 @@ int main(void)
     glfwTerminate();
     return 0;
 }
+
