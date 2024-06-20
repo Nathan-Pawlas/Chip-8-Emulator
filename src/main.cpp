@@ -30,20 +30,24 @@ int main(void)
 
     chip8 chip8_emu;
 
-    /* Loop until the user closes the window */
-    while (!glfwWindowShouldClose(window))
-    {
-        /* Render here */
-        glClear(GL_COLOR_BUFFER_BIT);
+    chip8_emu.initialize();
 
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
-
-        /* Poll for and process events */
-        glfwPollEvents();
-    }
-
-    glfwTerminate();
+    chip8_emu.load_game("IBM Logo.ch8");
+    
     return 0;
 }
 
+/* Loop until the user closes the window */
+    //while (!glfwWindowShouldClose(window))
+    //{
+    //    /* Render here */
+    //    glClear(GL_COLOR_BUFFER_BIT);
+
+    //    /* Swap front and back buffers */
+    //    glfwSwapBuffers(window);
+
+    //    /* Poll for and process events */
+    //    glfwPollEvents();
+    //}
+
+    //glfwTerminate();
