@@ -24,19 +24,9 @@ void chip8::initialize()
 		key_inputs[i] = 0;
 		reg[i] = 0;
 	}
-	for (int i = 0; i < 64 * 32; i++)
-	{
-		gfx[i] = 0;
-	}
 	for (int i = 0; i < 4096; i++)
 	{
 		memory[i] = 0;
-	}
-
-	//Load fonts
-	for (int i = 0; i < 80; i++)
-	{
-		memory[i] = fonts[i];
 	}
 }
 
