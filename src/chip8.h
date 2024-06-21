@@ -15,6 +15,8 @@ public:
 	void emulate();
 
 	void load_game(const char* file_path);
+
+	void disp_clear();
 public:
 	unsigned short opcode;
 	unsigned char memory[4096];

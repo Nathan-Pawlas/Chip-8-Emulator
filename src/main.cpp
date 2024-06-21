@@ -32,8 +32,10 @@ int main(void)
 
     chip8_emu.initialize();
 
-    chip8_emu.load_game("IBM Logo.ch8");
+    //chip8_emu.load_game("IBM Logo.ch8");
     
+    chip8_emu.emulate();
+
     return 0;
 }
 

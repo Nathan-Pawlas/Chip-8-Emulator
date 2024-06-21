@@ -49,10 +49,25 @@ void chip8::emulate()
 	//Fetch
 	opcode = (memory[pc] << 8) | memory[pc+1]; //Loading 2bytes from memory into opcode
 	//00XX << 8 = XX00 | 00YY = XXYY
-	printf("%x \n", opcode);
+	
+	unsigned short a = 0;
+
 	//Decode
 	switch (opcode & 0xF000) //Instruction determined by first nibble most times
 	{
+	case 0x0000:
+		a = opcode & 0x00FF;
+		switch (a)
+		{
+		case 0x00E0:
+			disp_clear();
+			pc += 2;
+			break;
+		case 0x00EE: //Basically a return call, get address and decrement sp
+			pc = stack[stack_pointer];
+			stack_pointer -= 1;
+			break;
+		}
 	case 0x1000: //Jump To
 		pc = 0x0FFF & opcode;
 		break;
@@ -88,7 +103,7 @@ void chip8::emulate()
 		pc += 2;
 		break;
 	case 0x8000:
-		unsigned short a = opcode & 0x000F; //Instruction 8 depends on the last nibble: 0x8XYa
+		a = opcode & 0x000F; //Instruction 8 depends on the last nibble: 0x8XYa
 		switch (a)
 		{
 		case 0x0000:
@@ -108,11 +123,24 @@ void chip8::emulate()
 			pc += 2;
 			break;
 		case 0x0004:
-			// To Do
+		{	//X + Y with Overflow
+			unsigned char x = reg[(opcode & 0x0F00) >> 8];
+			unsigned char y = reg[(opcode & 0x00F0) >> 4];
+			unsigned char result = x + y;
+			if ((x > 0 && y > 0 && result <= 0) || (x < 0 && y < 0 && result >= 0))
+				reg[0xF] = 1;
+			else
+				reg[0xF] = 0;
+			reg[(opcode & 0x0F00) >> 8] = result;
 			pc += 2;
 			break;
-		case 0x0005:
-			//To Do
+		}
+		case 0x0005: //Subtraction with underflow
+			reg[(opcode & 0x0F00) >> 8] -= reg[(opcode & 0x00F0) >> 4];
+			if (reg[(opcode & 0x0F00) >> 8] >= reg[(opcode & 0x00F0) >> 4])
+				reg[0xF] = 0;
+			else
+				reg[0xF] = 1;
 			pc += 2;
 			break;
 		case 0x0006: //Store least sig bit in Flag Reg, then bitshift left 1
@@ -121,10 +149,14 @@ void chip8::emulate()
 			pc += 2;
 			break;
 		case 0x0007:
-			//To Do
+			reg[(opcode & 0x0F00) >> 8] = reg[(opcode & 0x00F0) >> 4] - reg[(opcode & 0x0F00) >> 8];
+			if (reg[(opcode & 0x00F0) >> 4] >= reg[(opcode & 0x0F00) >> 8])
+				reg[0xF] = 0;
+			else
+				reg[0xF] = 1;
 			pc += 1;
 			break;
-		case 0x000E: //Store most sig big in flag reg, bitshift right 1
+		case 0x000E: //Store most sig bit in flag reg, bitshift right 1
 			reg[0xF] = 0x8000 & reg[(0x0F00 & opcode) >> 8];
 			reg[(0x0F00 & opcode) >> 8] <<= 1;
 			pc += 2;
@@ -150,10 +182,11 @@ void chip8::emulate()
 		break;
 	case 0xD000:
 		//To Do, Drawing
+
 		pc += 2;
 		break;
 	case 0xE000:
-		unsigned short a = opcode & 0x00FF;
+		a = opcode & 0x00FF;
 		switch (a)
 		{
 		case 0x009E:
@@ -170,7 +203,7 @@ void chip8::emulate()
 			break;
 		}
 	case 0xF000:
-		unsigned short a = opcode & 0x00FF;
+		a = opcode & 0x00FF;
 		switch (a)
 		{
 		case 0x0007:
@@ -229,4 +262,9 @@ void chip8::load_game(const char* file_path)
 		memory[i + 0x200] = buffer.at(i);
 
 	emulate();
+}
+
+void chip8::disp_clear()
+{
+
 }
