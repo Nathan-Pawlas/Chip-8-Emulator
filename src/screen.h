@@ -102,7 +102,6 @@ public:
 
 				chip->reg[0xF] = 0;
 			}
-
 			accumulator += clock.getElapsedTime();
 			timerAccumulator += clock.restart();
 		}
