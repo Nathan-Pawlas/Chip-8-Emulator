@@ -26,7 +26,7 @@
     <ClInclude Include="src\chip8.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\screen.h">
+    <ClInclude Include="src\driver.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

@@ -12,33 +12,28 @@
 #include <ctime>
 #include <random>
 
-#define SCREEN_WIDTH 640
-#define SCREEN_HEIGHT 320
+#define SCREEN_WIDTH 768
+#define SCREEN_HEIGHT 384
 
-class Screen
+class Driver
 {
 public:
-	Screen()
+	Driver()
 	{};
-	~Screen()
+	~Driver()
 	{};
 
 	void run(chip8* cpu)
 	{
 
 		sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Chip8");
-		backgroundColor = sf::Color().Black;
+		backgroundColor = sf::Color(35,35,35,255);
 		chip = cpu;
 		pixel.setSize(sf::Vector2f(pixelscale, pixelscale));
-		pixel.setFillColor(sf::Color().White);
+		pixel.setFillColor(sf::Color(200,200,200,255));
 
 		clear_screen();
 
-		//Load fonts
-		for (int i = 0; i < 80; i++)
-		{
-			chip->memory[i] = fonts[i];
-		}
 
 		while (window.isOpen())
 		{
@@ -83,14 +78,13 @@ public:
 
 			if (chip->draw) {
 				window.clear(backgroundColor);
-				for (std::size_t x = 0; x < 64; x++) {
-					for (std::size_t y = 0; y < 32; y++) {
-						if (chip->gfx[y + x * 64] == 1) {
-							/*std::uint8_t r = rand() % 255;
-							std::uint8_t g = rand() % 255;
-							std::uint8_t b = rand() % 255;
-							pixel.setFillColor(sf::Color(r, g, b));*/
-							pixel.setPosition(y, x);
+				for (int y = 0; y < 32; y++)
+				{
+					for (int x = 0; x < 64; x++)
+					{
+						if (chip->gfx[y * 64 + x])
+						{
+							pixel.setPosition(x * pixelscale, y * pixelscale);
 							window.draw(pixel);
 						}
 					}
@@ -107,26 +101,6 @@ public:
 
 public:
 	unsigned char display[64 * 32];
-
-	//Fonts are 4x5 pixels
-	unsigned char fonts[80] =
-	{
-		0x60, 0xB0, 0xB0, 0xB0, 0x60, //0
-		0xF0, 0x30, 0x30, 0x30, 0x78, //1
-		0xF0, 0x90, 0x20, 0x40, 0xF0, //2
-		0xF0, 0x10, 0x70, 0x10, 0xF0, //3
-		0x90, 0x90, 0xF0, 0x10, 0x10, //4
-		0xF0, 0x80, 0xF0, 0x10, 0xF0, //5
-		0xF0, 0x80, 0xF0, 0x90, 0xF0, //6
-		0xF0, 0x90, 0x38, 0x10, 0x10, //7
-		0xF0, 0x90, 0xF0, 0x90, 0xF0, //8
-		0xF0, 0x90, 0xF0, 0x10, 0x10, //9
-		0x60, 0x90, 0xF0, 0x90, 0x90, //A
-		0xE0, 0x90, 0xE0, 0x90, 0xE0, //B
-		0xF0, 0x80, 0x80, 0x80, 0xF0, //C
-		0xE0, 0x90, 0x90, 0x90, 0xE0, //E
-		0xF0, 0x80, 0xF0, 0x80, 0x80, //F
-	};
 
 private:
 	void handle_inputs(sf::Event event)
@@ -146,7 +120,7 @@ private:
 private:
 	chip8* chip;
 
-	float_t pixelscale = 8.0f;
+	float_t pixelscale = 12.0f;
 
 	sf::RenderWindow window;
 	sf::Color backgroundColor;

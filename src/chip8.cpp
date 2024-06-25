@@ -29,10 +29,11 @@ void chip8::initialize()
 	{
 		memory[i] = 0;
 	}
-	for (int i = 0; i < 64 * 32; i++)
+	for (int i = 0; i < 80; i++)
 	{
-		gfx[i] = 0;
+		memory[i] = fonts[i];
 	}
+	disp_clear();
 }
 
 
@@ -48,7 +49,7 @@ void chip8::emulate()
 	unsigned short a = 0;
 
 	//Decode
-	switch (opcode & 0xF000) //Instruction determined by first nibble most times
+	switch (opcode & 0xF000) //Main Instruction determined by first nibble
 	{
 	case 0x0000:
 		a = opcode & 0x00FF;
@@ -56,11 +57,13 @@ void chip8::emulate()
 		{
 		case 0x00E0:
 			disp_clear();
+			draw = true;
 			pc += 2;
 			break;
 		case 0x00EE: //Basically a return call, get address and decrement sp
-			pc = stack[stack_pointer];
 			stack_pointer -= 1;
+			pc = stack[stack_pointer];
+			pc += 2;
 			break;
 		}
 		break;
@@ -102,19 +105,19 @@ void chip8::emulate()
 		a = opcode & 0x000F; //Instruction 8 depends on the last nibble: 0x8XYa
 		switch (a)
 		{
-		case 0x0000:
+		case 0x0000: //X = Y
 			reg[(0x0F00 & opcode) >> 8] = reg[(0x00F0 & opcode) >> 4];
 			pc += 2;
 			break;
-		case 0x0001:
+		case 0x0001: //X = X | Y
 			reg[(0x0F00 & opcode) >> 8] |= reg[(0x00F0 & opcode) >> 4];
 			pc += 2;
 			break;
-		case 0x0002:
+		case 0x0002: // X = X & Y
 			reg[(0x0F00 & opcode) >> 8] &= reg[(0x00F0 & opcode) >> 4];
 			pc += 2;
 			break;
-		case 0x0003:
+		case 0x0003: // X = X ^ Y
 			reg[(0x0F00 & opcode) >> 8] ^= reg[(0x00F0 & opcode) >> 4];
 			pc += 2;
 			break;
@@ -153,7 +156,7 @@ void chip8::emulate()
 			pc += 1;
 			break;
 		case 0x000E: //Store most sig bit in flag reg, bitshift right 1
-			reg[0xF] = 0x8000 & reg[(0x0F00 & opcode) >> 8];
+			reg[0xF] = 0x8 & reg[(0x0F00 & opcode) >> 8];
 			reg[(0x0F00 & opcode) >> 8] <<= 1;
 			pc += 2;
 			break;
@@ -179,35 +182,32 @@ void chip8::emulate()
 	case 0xD000:
 	{
 		//Overall design aided by this blog post: https://tobiasvl.github.io/blog/write-a-chip-8-emulator/#dxyn-display
-
-		uint8_t x_pos = reg[(opcode & 0x0F00) >> 8] % RESOLUTION_WIDTH;
-		uint8_t y_pos = reg[(opcode & 0x00F0) >> 4] % RESOLUTION_HEIGHT;
+		uint8_t Vx = (opcode & 0x0F00) >> 8;
+		uint8_t Vy = (opcode & 0x00F0) >> 4;
+		auto spriteHeight = opcode & 0x000F;
 
 		reg[0xF] = 0;
 
-		uint8_t n = (opcode & 0x000F);
+		auto xPos = reg[Vx];
+		auto yPos = reg[Vy];
 
-		for (int x = 0; x < n; x++)
+		for (int row = 0; row < spriteHeight; row++)
 		{
-			uint8_t sprite_data = memory[index + x];
-
-			for (int y = 0; y < 8; y++)
+			uint8_t sprite_byte = memory[index + row];
+			for (int col = 0; col < 8; col++)
 			{
-				uint8_t pixel = sprite_data & (0x80 >> y);
-				uint8_t display_index = (y_pos + x) * RESOLUTION_WIDTH + (x_pos + y);
-				if (pixel != 0)
+				if ((sprite_byte & (0x80 >> col)) != 0)
 				{
-					if (gfx[display_index] == 1)
-					{
-						reg[0xf] = 1;
-						gfx[display_index] = 0;
-					}
-					else
-						gfx[display_index] = 1;
-
+					uint8_t px = xPos + col;
+					uint8_t py = yPos + row;
+					uint16_t pixel = px + py * RESOLUTION_WIDTH;
+					if (gfx[pixel])
+						reg[0x0F] = 1;
+					gfx[pixel] ^= 1;
 				}
 			}
 		}
+
 		draw = true;
 		pc += 2;
 		break;
@@ -250,11 +250,16 @@ void chip8::emulate()
 			pc += 2;
 			break;
 		case 0x001E:
+			if (index + reg[(opcode & 0x0F00) >> 8] > 0xFFF)
+				reg[0xF] = 1;
+			else
+				reg[0xF] = 0;
 			index += reg[(opcode & 0x0F00) >> 8];
 			pc += 2;
 			break;
 		case 0x0029:
-			//To Do
+			index = reg[(opcode & 0x0F00) >> 8] * 5;
+			pc += 2;
 			break;
 		case 0x0033:
 			//To Do
@@ -268,8 +273,6 @@ void chip8::emulate()
 		}
 		break;
 	}
-
-	
 }
 
 void chip8::load_game(const char* file_path)
