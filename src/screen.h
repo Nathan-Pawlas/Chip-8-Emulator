@@ -18,15 +18,17 @@
 class Screen
 {
 public:
-	Screen();
-	~Screen();
+	Screen()
+	{};
+	~Screen()
+	{};
 
-	void initialize(chip8* cpu)
+	void run(chip8* cpu)
 	{
-		chip = cpu;
 
-		sf::RenderWindow window(sf::RenderWindow(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Chip8", sf::Style::Close));
+		sf::RenderWindow window(sf::VideoMode(SCREEN_WIDTH, SCREEN_HEIGHT), "Chip8");
 		backgroundColor = sf::Color().Black;
+		chip = cpu;
 		pixel.setSize(sf::Vector2f(pixelscale, pixelscale));
 		pixel.setFillColor(sf::Color().White);
 
@@ -37,10 +39,7 @@ public:
 		{
 			chip->memory[i] = fonts[i];
 		}
-	}
 
-	void run()
-	{
 		while (window.isOpen())
 		{
 			sf::Event event;
@@ -82,17 +81,16 @@ public:
 				timerAccumulator = sf::Time::Zero;
 			}
 
-			if (chip->reg[0xF]) {
+			if (chip->draw) {
 				window.clear(backgroundColor);
-
-				for (std::size_t x= 0; x< 64; x++) {
-					for (std::size_t y= 0; y< 128; y++) {
-						if (gfx[y+ x* 64] == 1) {
+				for (std::size_t x = 0; x < 64; x++) {
+					for (std::size_t y = 0; y < 32; y++) {
+						if (chip->gfx[y + x * 64] == 1) {
 							/*std::uint8_t r = rand() % 255;
 							std::uint8_t g = rand() % 255;
 							std::uint8_t b = rand() % 255;
 							pixel.setFillColor(sf::Color(r, g, b));*/
-							pixel.setPosition(pixelscale * y, pixelscale * x);
+							pixel.setPosition(y, x);
 							window.draw(pixel);
 						}
 					}
@@ -108,7 +106,7 @@ public:
 	}
 
 public:
-	unsigned char gfx[64 * 32];
+	unsigned char display[64 * 32];
 
 	//Fonts are 4x5 pixels
 	unsigned char fonts[80] =
@@ -140,7 +138,7 @@ private:
 	{
 		for (int i = 0; i < 64 * 32; i++)
 		{
-			gfx[i] = 0;
+			chip->gfx[i] = 0;
 		}
 	}
 

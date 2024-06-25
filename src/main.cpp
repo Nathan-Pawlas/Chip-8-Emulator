@@ -1,23 +1,16 @@
-#include <SFML/Graphics.hpp>
+#include "chip8.h"
+#include "screen.h"
 
 int main()
 {
-    sf::RenderWindow window(sf::VideoMode(1280, 640), "SFML works!");
-    sf::CircleShape shape(100.f);
-    shape.setFillColor(sf::Color::Green);
+    chip8 chip_emu;
+    Screen screen;
 
-    while (window.isOpen())
-    {
-        sf::Event event;
-        while (window.pollEvent(event))
-        {
-            if (event.type == sf::Event::Closed)
-                window.close();
-        }
+    chip_emu.initialize();
+    chip_emu.load_game("ibm.ch8");
+   
+    screen.run(&chip_emu);
 
-        window.clear();
-        window.display();
-    }
 
     return 0;
 }

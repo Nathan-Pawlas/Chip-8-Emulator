@@ -1,5 +1,6 @@
 #include "chip8.h"
 
+
 chip8::chip8()
 {
 }
@@ -27,6 +28,10 @@ void chip8::initialize()
 	for (int i = 0; i < 4096; i++)
 	{
 		memory[i] = 0;
+	}
+	for (int i = 0; i < 64 * 32; i++)
+	{
+		gfx[i] = 0;
 	}
 }
 
@@ -58,6 +63,7 @@ void chip8::emulate()
 			stack_pointer -= 1;
 			break;
 		}
+		break;
 	case 0x1000: //Jump To
 		pc = 0x0FFF & opcode;
 		break;
@@ -79,7 +85,7 @@ void chip8::emulate()
 			pc += 2;
 		break;
 	case 0x5000: //X == Y
-		if (reg[(0x0F00 * opcode) >> 8] == reg[(0x00F0 & opcode) >> 4])
+		if (reg[(0x0F00 & opcode) >> 8] == reg[(0x00F0 & opcode) >> 4])
 			pc += 4;
 		else
 			pc += 2;
@@ -154,7 +160,7 @@ void chip8::emulate()
 		}
 		break;
 	case 0x9000:
-		if (reg[(0x0F00 * opcode) >> 8] != reg[(0x00F0 & opcode) >> 4])
+		if (reg[(0x0F00 & opcode) >> 8] != reg[(0x00F0 & opcode) >> 4])
 			pc += 4;
 		else
 			pc += 2;
@@ -171,10 +177,41 @@ void chip8::emulate()
 		pc += 2;
 		break;
 	case 0xD000:
-		//To Do, Drawing
+	{
+		//Overall design aided by this blog post: https://tobiasvl.github.io/blog/write-a-chip-8-emulator/#dxyn-display
 
+		uint8_t x_pos = reg[(opcode & 0x0F00) >> 8] % RESOLUTION_WIDTH;
+		uint8_t y_pos = reg[(opcode & 0x00F0) >> 4] % RESOLUTION_HEIGHT;
+
+		reg[0xF] = 0;
+
+		uint8_t n = (opcode & 0x000F);
+
+		for (int x = 0; x < n; x++)
+		{
+			uint8_t sprite_data = memory[index + x];
+
+			for (int y = 0; y < 8; y++)
+			{
+				uint8_t pixel = sprite_data & (0x80 >> y);
+				uint8_t display_index = (y_pos + x) * RESOLUTION_WIDTH + (x_pos + y);
+				if (pixel != 0)
+				{
+					if (gfx[display_index] == 1)
+					{
+						reg[0xf] = 1;
+						gfx[display_index] = 0;
+					}
+					else
+						gfx[display_index] = 1;
+
+				}
+			}
+		}
+		draw = true;
 		pc += 2;
 		break;
+	}
 	case 0xE000:
 		a = opcode & 0x00FF;
 		switch (a)
@@ -192,6 +229,7 @@ void chip8::emulate()
 				pc += 2;
 			break;
 		}
+		break;
 	case 0xF000:
 		a = opcode & 0x00FF;
 		switch (a)
@@ -228,6 +266,7 @@ void chip8::emulate()
 			//To Do
 			break;
 		}
+		break;
 	}
 
 	
@@ -250,11 +289,12 @@ void chip8::load_game(const char* file_path)
 
 	for (int i = 0; i < buffer.size(); i++)
 		memory[i + 0x200] = buffer.at(i);
-
-	emulate();
 }
 
 void chip8::disp_clear()
 {
-
+	for (int i = 0; i < 64 * 32; i++)
+	{
+		gfx[i] = 0;
+	}
 }

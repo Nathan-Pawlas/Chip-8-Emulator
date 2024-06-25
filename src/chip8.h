@@ -4,6 +4,9 @@
 #include <vector>
 #include <iostream>
 
+#define RESOLUTION_WIDTH 64
+#define RESOLUTION_HEIGHT 32
+
 class chip8
 {
 public:
@@ -28,6 +31,8 @@ public:
 	unsigned char delay_timer;
 	unsigned char sound_timer;
 	unsigned char key_inputs[16];
+	unsigned char gfx[64 * 32];
+	bool draw = false;
 
 	
 };
