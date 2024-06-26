@@ -7,7 +7,7 @@ int main()
     Driver screen;
 
     chip_emu.initialize();
-    chip_emu.load_game("test_opcode.ch8");
+    chip_emu.load_game("PONG.ch8");
    
     screen.run(&chip_emu);
 

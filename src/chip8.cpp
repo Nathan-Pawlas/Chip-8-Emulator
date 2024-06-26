@@ -239,8 +239,14 @@ void chip8::emulate()
 			pc += 2;
 			break;
 		case 0x000A:
-			//To Do
-			break;
+			for (int i = 0; i < 16; i++)
+			{
+				if (key_inputs[i] == 1)
+				{
+					pc += 2; // Only increment the PC if a key is pressed
+				}
+			}
+			break; // Otherwise, stay on the same opcode until a key is pressed
 		case 0x0015:
 			delay_timer = reg[(opcode & 0x0F00) >> 8];
 			pc += 2;
@@ -262,14 +268,35 @@ void chip8::emulate()
 			pc += 2;
 			break;
 		case 0x0033:
-			//To Do
+		{
+			//Used the following article for my understanding: https://www.allaboutcircuits.com/technical-articles/fundamentals-of-binary-coded-decimal-bcd/
+			uint16_t binary = reg[(opcode & 0x0F00) >> 8];
+			memory[index] = binary / 100;
+			memory[index + 1] = (binary / 10) % 10;
+			memory[index + 2] = binary % 10;
+			pc += 2;
 			break;
+		}
 		case 0x0055:
-			//To Do
+		{
+			int n = (opcode & 0x0F00) >> 8;
+			for (int i = 0; i <= n; i++)
+			{
+				memory[index + i] = reg[i];
+			}
+			pc += 2;
 			break;
+		}
 		case 0x0065:
-			//To Do
+		{
+			int n = (opcode & 0x0F00) >> 8;
+			for (int i = 0; i <= n; i++)
+			{
+				reg[i] = memory[index + i];
+			}
+			pc += 2;
 			break;
+		}
 		}
 		break;
 	}

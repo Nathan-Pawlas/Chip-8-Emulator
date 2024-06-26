@@ -8,8 +8,8 @@
 
 // STL includes
 #include <iostream>
-#include <fstream>
-#include <ctime>
+#include <thread>
+#include <chrono>
 #include <random>
 
 #define SCREEN_WIDTH 768
@@ -34,49 +34,29 @@ public:
 
 		clear_screen();
 
+		sf::Clock clock;
+		sf::Time time = clock.getElapsedTime();
+
+		uint32_t total_cycles = 0;
 
 		while (window.isOpen())
 		{
+			chip->emulate();
+
 			sf::Event event;
 			while (window.pollEvent(event))
 			{
 				if (event.type == sf::Event::Closed) {
 					window.close();
 				}
+				if (event.type == sf::Event::KeyPressed || event.type == sf::Event::KeyReleased)
+					handle_inputs(event, cpu);
 			}
-			//Execute instructions at 60fps
-			if (accumulator >= tpf)
-			{
-				try {
-					chip->emulate();
-				}
-				catch (const std::string& msg) {
-					window.close();
-					std::cerr << msg << std::endl;
-				}
-				accumulator = sf::Time::Zero;
-			}
-			//Handle Delay and Sound timers
-			if (timerAccumulator >= timerTpf) {
-				if (chip->delay_timer > 0) {
-					chip->delay_timer--;
-				}
-				if (chip->sound_timer > 0) {
-					/*if (sound.getStatus() != sf::Sound::Playing) {
-						sound.play();
-					}*/
-					chip->sound_timer--;
-				}
-				else {
-					/*if (sound.getStatus() == sf::Sound::Playing) {
-						sound.stop();
-					}*/
-				}
-
-				timerAccumulator = sf::Time::Zero;
-			}
+			
+			update_timers();
 
 			if (chip->draw) {
+				chip->draw = false;
 				window.clear(backgroundColor);
 				for (int y = 0; y < 32; y++)
 				{
@@ -93,9 +73,8 @@ public:
 				window.display();
 
 				chip->reg[0xF] = 0;
-			}
-			accumulator += clock.getElapsedTime();
-			timerAccumulator += clock.restart();
+			}			
+			std::this_thread::sleep_for(std::chrono::microseconds(2));
 		}
 	}
 
@@ -103,9 +82,79 @@ public:
 	unsigned char display[64 * 32];
 
 private:
-	void handle_inputs(sf::Event event)
+	void handle_inputs(sf::Event event, chip8* cpu)
 	{
-
+		
+		if (event.type == sf::Event::KeyPressed)
+		{
+			if (event.key.code == sf::Keyboard::Num1)
+				cpu->key_inputs[0x1] = 1;
+			else if (event.key.code == sf::Keyboard::Num2)
+				cpu->key_inputs[0x2] = 1;
+			else if (event.key.code == sf::Keyboard::Num3)
+				cpu->key_inputs[0x3] = 1;
+			else if (event.key.code == sf::Keyboard::Num4)
+				cpu->key_inputs[0xC] = 1;
+			else if (event.key.code == sf::Keyboard::Q)
+				cpu->key_inputs[0x4] = 1;
+			else if (event.key.code == sf::Keyboard::W)
+				cpu->key_inputs[0x5] = 1;
+			else if (event.key.code == sf::Keyboard::E)
+				cpu->key_inputs[0x6] = 1;
+			else if (event.key.code == sf::Keyboard::R)
+				cpu->key_inputs[0xD] = 1;
+			else if (event.key.code == sf::Keyboard::A)
+				cpu->key_inputs[0x7] = 1;
+			else if (event.key.code == sf::Keyboard::S)
+				cpu->key_inputs[0x8] = 1;
+			else if (event.key.code == sf::Keyboard::D)
+				cpu->key_inputs[0x9] = 1;
+			else if (event.key.code == sf::Keyboard::F)
+				cpu->key_inputs[0xE] = 1;
+			else if (event.key.code == sf::Keyboard::Z)
+				cpu->key_inputs[0xA] = 1;
+			else if (event.key.code == sf::Keyboard::X)
+				cpu->key_inputs[0x0] = 1;
+			else if (event.key.code == sf::Keyboard::C)
+				cpu->key_inputs[0xB] = 1;
+			else if (event.key.code == sf::Keyboard::V)
+				cpu->key_inputs[0xF] = 1;
+		}
+		else if (event.type == sf::Event::KeyReleased)
+		{
+			if (event.key.code == sf::Keyboard::Num1)
+				cpu->key_inputs[0x1] = 0;
+			else if (event.key.code == sf::Keyboard::Num2)
+				cpu->key_inputs[0x2] = 0;
+			else if (event.key.code == sf::Keyboard::Num3)
+				cpu->key_inputs[0x3] = 0;
+			else if (event.key.code == sf::Keyboard::Num4)
+				cpu->key_inputs[0xC] = 0;
+			else if (event.key.code == sf::Keyboard::Q)
+				cpu->key_inputs[0x4] = 0;
+			else if (event.key.code == sf::Keyboard::W)
+				cpu->key_inputs[0x5] = 0;
+			else if (event.key.code == sf::Keyboard::E)
+				cpu->key_inputs[0x6] = 0;
+			else if (event.key.code == sf::Keyboard::R)
+				cpu->key_inputs[0xD] = 0;
+			else if (event.key.code == sf::Keyboard::A)
+				cpu->key_inputs[0x7] = 0;
+			else if (event.key.code == sf::Keyboard::S)
+				cpu->key_inputs[0x8] = 0;
+			else if (event.key.code == sf::Keyboard::D)
+				cpu->key_inputs[0x9] = 0;
+			else if (event.key.code == sf::Keyboard::F)
+				cpu->key_inputs[0xE] = 0;
+			else if (event.key.code == sf::Keyboard::Z)
+				cpu->key_inputs[0xA] = 0;
+			else if (event.key.code == sf::Keyboard::X)
+				cpu->key_inputs[0x0] = 0;
+			else if (event.key.code == sf::Keyboard::C)
+				cpu->key_inputs[0xB] = 0;
+			else if (event.key.code == sf::Keyboard::V)
+				cpu->key_inputs[0xF] = 0;
+		}
 	}
 
 	void clear_screen()
@@ -114,6 +163,14 @@ private:
 		{
 			chip->gfx[i] = 0;
 		}
+	}
+
+	void update_timers()
+	{
+		if (chip->delay_timer > 0)
+			chip->delay_timer -= 1;
+		if (chip->sound_timer > 0)
+			chip->sound_timer -= 1;
 	}
 
 
@@ -125,11 +182,6 @@ private:
 	sf::RenderWindow window;
 	sf::Color backgroundColor;
 	sf::RectangleShape pixel;
-	sf::Clock clock;
-	sf::Time tpf = sf::seconds(1.f / 60);
-	sf::Time accumulator = sf::Time::Zero;
-	sf::Time timerTpf = sf::seconds(1.f / 60.f);
-	sf::Time timerAccumulator = sf::Time::Zero;
 };
 
 
