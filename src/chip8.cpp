@@ -306,10 +306,13 @@ void chip8::load_game(const char* file_path)
 {
 	//File Reading Source: https://stackoverflow.com/questions/5420317/reading-and-writing-binary-file //
 
-	std::ifstream input(file_path, std::ios::binary);
-
-	if (!input.good())
+	std::ifstream input(file_path, std::ios::binary | std::ios::in);
+	
+	if (!input.is_open())
+	{
+		std::cerr << "ROM could not be loaded, ensure file path is correct!";
 		exit(-1);
+	}
 
 	// copies all data into buffer
 	std::vector<unsigned char> buffer(std::istreambuf_iterator<char>(input), {});
