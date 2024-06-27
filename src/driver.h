@@ -74,7 +74,7 @@ public:
 
 				chip->reg[0xF] = 0;
 			}			
-			std::this_thread::sleep_for(std::chrono::microseconds(2));
+			std::this_thread::sleep_for(std::chrono::microseconds(6)); //Delay the processing speed
 		}
 	}
 
