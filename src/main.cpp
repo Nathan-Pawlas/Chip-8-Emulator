@@ -3,13 +3,12 @@
 
 int main(int argc, char* argv[])
 {
-    const char* file_path;
+    const char* file_path = "tests/ibm.ch8";
 
     if (argc <= 1)
     {
         std::cout << "Path to ROM to be loaded must be given as argument\nType -help to see usage\n"
             << "Defaulting to IBM logo (tests/ibm.ch8)" << std::endl;
-        file_path = "tests/ibm.ch8";
     }
     else if (argc == 2)
     {
@@ -20,7 +19,6 @@ int main(int argc, char* argv[])
     {
         std::cout << "Path to ROM to be loaded must be given as argument\nType -help to see usage\n"
             << "Defaulting to IBM logo (tests/ibm.ch8)" << std::endl;
-        file_path = "tests/ibm.ch8";
     }
 
     chip8 chip_emu;
